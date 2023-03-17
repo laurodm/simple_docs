@@ -5,17 +5,20 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import md from "markdown-it";
 import { ParsedUrlQuery } from "querystring";
 import { docsReader } from "@/app";
-import { TDoc } from "@/types";
 import Layout from "@/components/layout/layout";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Router from "next/router";
+import {
+  doscFoldersNamesReader,
+  doscFoldersReader,
+} from "@/app/controllers/docs/docsFoldersReader";
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const files = fs.readdirSync("docs");
+  const files = doscFoldersNamesReader("docs");
 
-  const paths = files.map((fileName) => ({
+  const paths = files.map((dir) => ({
     params: {
-      slug: fileName.replace(".md", ""),
+      slug: dir.replace(".md", ""),
     },
   }));
 
@@ -30,14 +33,15 @@ interface IParams extends ParsedUrlQuery {
 }
 
 export const getStaticProps: GetStaticProps = async (context) => {
-  const layoutDocs = docsReader();
+  const docsFoldersNames = doscFoldersReader("docs");
 
   const { slug } = context.params as IParams;
-  const fileName = fs.readFileSync(`docs/${slug}.md`, "utf-8");
+  console.log(slug);
+  const fileName = fs.readFileSync(`/${slug}.md`, "utf-8");
   const { data: frontmatter, content } = matter(fileName);
   return {
     props: {
-      layoutDocs,
+      docsFoldersNames,
       frontmatter,
       content,
     },
@@ -45,7 +49,7 @@ export const getStaticProps: GetStaticProps = async (context) => {
 };
 
 type TProps = {
-  layoutDocs: TDoc[];
+  docsFoldersNames: { [key: string]: any }[];
   frontmatter: {
     title: string;
     metaTitle: string;
@@ -57,7 +61,11 @@ type TProps = {
   content: string;
 };
 
-const PostPage: React.FC<TProps> = ({ frontmatter, content, layoutDocs }) => {
+const PostPage: React.FC<TProps> = ({
+  frontmatter,
+  content,
+  docsFoldersNames,
+}) => {
   const { user } = useUser();
 
   useEffect(() => {
@@ -70,7 +78,7 @@ const PostPage: React.FC<TProps> = ({ frontmatter, content, layoutDocs }) => {
   if (!user) return <></>;
 
   return (
-    <Layout docs={layoutDocs} user={user}>
+    <Layout {...{ docsFoldersNames, user }}>
       <div className="prose">
         <h1>{frontmatter.title}</h1>
         <div dangerouslySetInnerHTML={{ __html: md().render(content) }}></div>
