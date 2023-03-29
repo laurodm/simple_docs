@@ -16,12 +16,21 @@ export function doscFoldersNamesReader(dirname: string): string[] {
 }
 
 export function doscFoldersReader(dirname: string): { [key: string]: any }[] {
-  const docs = fs.readdirSync(dirname);
+  const docs = fs
+    .readdirSync(dirname)
+    .filter((fileName) => fileName !== "index.md");
   return docs.map((name): any => {
-    if (!name.includes(".md")) {
-      return { dir: name, files: doscFoldersReader(`${dirname}/${name}`) };
-    }
     const slug = name.replace(".md", "");
+    if (!name.includes(".md")) {
+      const readFile = fs.readFileSync(`${dirname}/${name}/index.md`, "utf-8");
+      const { data: frontmatter } = matter(readFile);
+      return {
+        dir: name,
+        files: doscFoldersReader(`${dirname}/${name}`),
+        slug,
+        frontmatter,
+      };
+    }
     const readFile = fs.readFileSync(`${dirname}/${name}`, "utf-8");
     const { data: frontmatter } = matter(readFile);
 

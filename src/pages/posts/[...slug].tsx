@@ -16,7 +16,8 @@ export const getStaticPaths: GetStaticPaths = async () => {
   const files = doscFoldersNamesReader("docs");
 
   const paths = files.map((dir) => {
-    const parsedDir = dir.replace("docs/", "").replace(".md", "").split("/");
+    let parsedDir = dir.replace("docs/", "").replace(".md", "").split("/");
+    parsedDir = parsedDir.filter((value) => value !== "index");
     return {
       params: {
         slug: parsedDir,
@@ -39,7 +40,13 @@ export const getStaticProps: GetStaticProps = async (context) => {
 
   const { slug } = context.params as IParams;
   const path = slug.join("/");
-  const fileName = fs.readFileSync(`docs/${path}.md`, "utf-8");
+  let fileName = "";
+  let exists = fs.existsSync(`docs/${path}/index.md`);
+  if (exists) {
+    fileName = fs.readFileSync(`docs/${path}/index.md`, "utf-8");
+  } else {
+    fileName = fs.readFileSync(`docs/${path}.md`, "utf-8");
+  }
   const { data: frontmatter, content } = matter(fileName);
   return {
     props: {

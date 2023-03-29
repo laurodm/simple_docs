@@ -12,19 +12,27 @@ type TProps = {
 const Layout: React.FC<TProps> = ({ children, user, docsFoldersNames }) => {
   function renderMenu(docItens: { [key: string]: any }[], dir?: string) {
     return (
-      <ul>
+      <ul className="even:pl-3">
         {docItens.map((doc, index): any => {
           if (doc.dir) {
             return (
               <li key={index}>
-                <span>{doc.dir}</span>
+                <Link
+                  href={`/posts/${dir ? dir + "/" : ""}${doc.slug}`}
+                  className="border-b-2 border-b-gray-100 border-solid block py-2"
+                >
+                  {doc.frontmatter.title}
+                </Link>
                 {renderMenu(doc.files, `${dir ? dir + "/" : ""}${doc.dir}`)}
               </li>
             );
           }
           return (
             <li key={index}>
-              <Link href={`/posts/${dir ? dir + "/" : ""}${doc.slug}`}>
+              <Link
+                href={`/posts/${dir ? dir + "/" : ""}${doc.slug}`}
+                className="border-b-2 border-b-gray-100 border-solid block py-2"
+              >
                 {doc.frontmatter.title}
               </Link>
             </li>
