@@ -4,7 +4,6 @@ import matter from "gray-matter";
 import { GetStaticPaths, GetStaticProps } from "next";
 import md from "markdown-it";
 import { ParsedUrlQuery } from "querystring";
-import { docsReader } from "@/app";
 import Layout from "@/components/layout/layout";
 import { useUser } from "@auth0/nextjs-auth0/client";
 import Router from "next/router";
@@ -16,11 +15,14 @@ import {
 export const getStaticPaths: GetStaticPaths = async () => {
   const files = doscFoldersNamesReader("docs");
 
-  const paths = files.map((dir) => ({
-    params: {
-      slug: dir.replace(".md", ""),
-    },
-  }));
+  const paths = files.map((dir) => {
+    const parsedDir = dir.replace("docs/", "").replace(".md", "").split("/");
+    return {
+      params: {
+        slug: parsedDir,
+      },
+    };
+  });
 
   return {
     paths,
@@ -29,15 +31,15 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 interface IParams extends ParsedUrlQuery {
-  slug: string;
+  slug: string[];
 }
 
 export const getStaticProps: GetStaticProps = async (context) => {
   const docsFoldersNames = doscFoldersReader("docs");
 
   const { slug } = context.params as IParams;
-  console.log(slug);
-  const fileName = fs.readFileSync(`/${slug}.md`, "utf-8");
+  const path = slug.join("/");
+  const fileName = fs.readFileSync(`docs/${path}.md`, "utf-8");
   const { data: frontmatter, content } = matter(fileName);
   return {
     props: {
